@@ -1,0 +1,394 @@
+"""
+Catalogd Service
+
+High-level service for catalogd operations including catalog listing and querying.
+"""
+
+import json
+import logging
+import sys
+from datetime import datetime, timezone
+from typing import Dict, List, Any
+
+from kubernetes import client
+from kubernetes.client.rest import ApiException
+
+from ..core.exceptions import CatalogdError
+from ..core.utils import handle_api_error
+from ..core.constants import KubernetesConstants
+from ..core.utils import is_output_piped
+from .client import CatalogdClient
+from .parser import NDJSONParser
+
+logger = logging.getLogger(__name__)
+
+
+class CatalogdService:
+    """High-level service for catalogd operations"""
+    
+    def __init__(self, core_api: client.CoreV1Api = None, custom_api: client.CustomObjectsApi = None, 
+                 skip_tls: bool = False, debug: bool = False):
+        """
+        Initialize catalogd service
+        
+        Args:
+            core_api: Kubernetes CoreV1Api client
+            custom_api: Kubernetes CustomObjectsApi client
+            skip_tls: Whether to skip TLS verification
+            debug: Enable debug logging
+        """
+        self.core_api = core_api
+        self.custom_api = custom_api
+        self.skip_tls = skip_tls
+        self.debug = debug
+        
+        # Initialize client and parser
+        self.client = CatalogdClient(core_api, skip_tls) if core_api else None
+        self.parser = NDJSONParser()
+        
+        # Instance variables for caching catalog data
+        self._loaded_catalog_name = None
+        self._loaded_catalog_data = None
+    
+    def _get_or_load_catalog_data(self, catalog_name: str, auth_headers: Dict[str, str] = None) -> List[Dict[str, Any]]:
+        """
+        Get or load catalog data with caching to avoid repeated expensive operations
+        
+        Args:
+            catalog_name: Name of the catalog to query
+            auth_headers: Authentication headers
+            
+        Returns:
+            List of parsed catalog items (cached if available)
+        """
+        # Check if we already have the data for this catalog cached
+        if self._loaded_catalog_name == catalog_name and self._loaded_catalog_data is not None:
+            logger.debug(f"Using cached catalog data for: {catalog_name}")
+            return self._loaded_catalog_data
+        
+        # Cache miss - fetch and parse the data
+        logger.debug(f"Cache miss - fetching catalog data for: {catalog_name}")
+        catalog_data = self.query_catalog_data(catalog_name, auth_headers)
+        
+        # Store in cache
+        self._loaded_catalog_name = catalog_name
+        self._loaded_catalog_data = catalog_data
+        
+        return catalog_data
+    
+    def list_cluster_catalogs(self) -> List[Dict[str, Any]]:
+        """
+        List all ClusterCatalogs from Kubernetes API
+        
+        Returns:
+            List of ClusterCatalog objects with enhanced information
+            
+        Raises:
+            CatalogdError: If listing fails
+        """
+        if not self.custom_api:
+            raise CatalogdError("Kubernetes client not available. Please ensure kubeconfig is properly configured or use --openshift-url and --openshift-token flags.")
+        
+        try:
+            logger.info("Fetching ClusterCatalogs from the cluster...")
+            cluster_catalogs = self.custom_api.list_cluster_custom_object(
+                group=KubernetesConstants.OLM_API_GROUP,
+                version="v1",
+                plural="clustercatalogs"
+            )
+            
+            logger.info(f"Found {len(cluster_catalogs.get('items', []))} ClusterCatalogs")
+            return cluster_catalogs.get('items', [])
+            
+        except (ApiException, Exception) as e:
+            # Use centralized API error handler for all exceptions
+            handle_api_error(e, CatalogdError)
+    
+    def display_catalogs_enhanced(self) -> int:
+        """
+        Display ClusterCatalogs with enhanced formatting
+        
+        Returns:
+            int: Exit code (0 for success, 1 for error)
+        """
+        try:
+            catalogs = self.list_cluster_catalogs()
+            
+            if not catalogs:
+                print("No ClusterCatalogs found in this cluster.")
+                return 0
+            
+            # Prepare catalog data for output
+            catalog_data = []
+            for catalog in catalogs:
+                name = catalog.get('metadata', {}).get('name', 'Unknown')
+                
+                # Determine serving status
+                status = catalog.get('status', {})
+                conditions = status.get('conditions', [])
+                serving = False
+                
+                for condition in conditions:
+                    if condition.get('type') == 'Serving' and condition.get('status') == 'True':
+                        serving = True
+                        break
+                
+                # Get creation timestamp and calculate age
+                creation_timestamp = catalog.get('metadata', {}).get('creationTimestamp')
+                age = self._calculate_age(creation_timestamp) if creation_timestamp else 'Unknown'
+                
+                catalog_info = {
+                    'name': name,
+                    'serving': serving,
+                    'age': age,
+                    'status': 'Serving' if serving else 'Not Serving'
+                }
+                catalog_data.append(catalog_info)
+            
+            # Output format depends on whether output is piped
+            if is_output_piped():
+                # JSON output for piping
+                print(json.dumps(catalog_data, indent=2))
+            else:
+                # Human-readable output
+                print(f"\nFound {len(catalog_data)} ClusterCatalog(s):")
+                print("-" * 60)
+                print(f"{'NAME':<30} {'STATUS':<15} {'AGE':<15}")
+                print("-" * 60)
+                
+                for catalog in catalog_data:
+                    status_symbol = "✓" if catalog['serving'] else "✗"
+                    print(f"{catalog['name']:<30} {status_symbol} {catalog['status']:<14} {catalog['age']:<15}")
+                
+                print("-" * 60)
+                serving_count = sum(1 for c in catalog_data if c['serving'])
+                print(f"Total: {len(catalog_data)} catalogs ({serving_count} serving)")
+            
+            return 0
+            
+        except Exception as e:
+            logger.error(f"Failed to display ClusterCatalogs: {e}")
+            print(f"Error listing ClusterCatalogs: {e}", file=sys.stderr)
+            return 1
+    
+    def validate_catalog_name(self, catalog_name: str) -> bool:
+        """
+        Validate catalog name format and suggest corrections
+        
+        Args:
+            catalog_name: Name of the catalog to validate
+            
+        Returns:
+            bool: True if catalog name appears valid
+            
+        Raises:
+            CatalogdError: If catalog name is obviously invalid
+        """
+        if not catalog_name:
+            raise CatalogdError("Catalog name cannot be empty")
+        
+        # Check for common catalog name patterns
+        valid_patterns = [
+            "openshift-redhat-operators",
+            "openshift-community-operators", 
+            "openshift-certified-operators",
+            "openshift-redhat-marketplace"
+        ]
+        
+        # Check for common typos
+        if catalog_name.lower() in [name.lower() for name in valid_patterns]:
+            return True
+        
+        # Check for common typos and suggest corrections
+        suggestions = []
+        for valid_name in valid_patterns:
+            if catalog_name.lower().replace("-", "").replace("_", "") == valid_name.lower().replace("-", "").replace("_", ""):
+                suggestions.append(valid_name)
+        
+        if suggestions:
+            raise CatalogdError(
+                f"Catalog name '{catalog_name}' appears to be misspelled.\n"
+                f"Did you mean: {', '.join(suggestions)}?\n\n"
+                f"To see all available catalogs, run:\n"
+                f"  python3 rbac-manager.py list-catalogs"
+            )
+        
+        # Check for obviously invalid characters
+        if any(char in catalog_name for char in [' ', '\t', '\n', '/', '\\', '?', '*']):
+            raise CatalogdError(
+                f"Catalog name '{catalog_name}' contains invalid characters.\n"
+                f"Catalog names should only contain lowercase letters, numbers, and hyphens.\n\n"
+                f"To see all available catalogs, run:\n"
+                f"  python3 rbac-manager.py list-catalogs"
+            )
+        
+        return True
+    
+    def query_catalog_data(self, catalog_name: str, auth_headers: Dict[str, str] = None) -> List[Dict[str, Any]]:
+        """
+        Query catalog data from catalogd service with enhanced error handling
+        
+        Args:
+            catalog_name: Name of the catalog to query
+            auth_headers: Authentication headers
+            
+        Returns:
+            List of parsed catalog items
+            
+        Raises:
+            CatalogdError: If query fails with detailed error information
+        """
+        if not self.client:
+            raise CatalogdError("Catalogd client not available. Ensure Kubernetes client is initialized.")
+        
+        # Validate catalog name before making request
+        self.validate_catalog_name(catalog_name)
+        
+        try:
+            # Create port-forward to catalogd service
+            port_forward_manager, port, is_https = self.client.create_port_forward()
+            
+            try:
+                # Make request to catalogd API
+                url = f"/catalogs/{catalog_name}/api/v1/all"
+                logger.info(f"Fetching catalog data for: {catalog_name}")
+                logger.debug(f"Making request to: {url}")
+                
+                response_body = self.client.make_catalogd_request(url, port_forward_manager, auth_headers, catalog_name)
+                
+                # Parse NDJSON response
+                items = self.parser.parse_stream(response_body)
+                return items
+                
+            finally:
+                port_forward_manager.stop()
+                
+        except CatalogdError:
+            # Re-raise CatalogdError as-is (already has enhanced error messages)
+            raise
+        except Exception as e:
+            logger.error(f"Failed to query catalog data: {e}")
+            # Provide enhanced error message for unexpected errors
+            error_str = str(e)
+            if "port-forward" in error_str.lower():
+                raise CatalogdError(
+                    f"Port-forward connection failed: {e}\n\n"
+                    f"This could mean:\n"
+                    f"  • Unable to establish connection to catalogd service\n"
+                    f"  • Kubernetes API server is not accessible\n"
+                    f"  • Network connectivity issues\n\n"
+                    f"Try:\n"
+                    f"  • Verifying cluster connectivity: kubectl cluster-info\n"
+                    f"  • Checking catalogd status: kubectl get pods -n openshift-catalogd\n"
+                    f"  • Using --debug flag for detailed logs"
+                )
+            elif "parsing" in error_str.lower() or "json" in error_str.lower():
+                raise CatalogdError(
+                    f"Failed to parse catalogd response: {e}\n\n"
+                    f"This could mean:\n"
+                    f"  • Catalogd service returned malformed data\n"
+                    f"  • Response was truncated or corrupted\n"
+                    f"  • Service is experiencing issues\n\n"
+                    f"Try:\n"
+                    f"  • Retrying the request\n"
+                    f"  • Checking catalogd service health\n"
+                    f"  • Using --debug flag to see raw response"
+                )
+            else:
+                raise CatalogdError(f"Failed to query catalog data: {e}")
+    
+    def get_catalog_packages(self, catalog_name: str, auth_headers: Dict[str, str] = None) -> List[str]:
+        """
+        Get list of packages in a catalog
+        
+        Args:
+            catalog_name: Name of the catalog
+            auth_headers: Authentication headers
+            
+        Returns:
+            List of package names
+        """
+        items = self._get_or_load_catalog_data(catalog_name, auth_headers)
+        return self.parser.extract_packages(items)
+    
+    def get_package_channels(self, catalog_name: str, package_name: str, 
+                           auth_headers: Dict[str, str] = None) -> List[str]:
+        """
+        Get list of channels for a package
+        
+        Args:
+            catalog_name: Name of the catalog
+            package_name: Name of the package
+            auth_headers: Authentication headers
+            
+        Returns:
+            List of channel names
+        """
+        items = self._get_or_load_catalog_data(catalog_name, auth_headers)
+        return self.parser.extract_channels(items, package_name)
+    
+    def get_channel_versions(self, catalog_name: str, package_name: str, channel_name: str,
+                           auth_headers: Dict[str, str] = None) -> List[str]:
+        """
+        Get list of versions for a package channel
+        
+        Args:
+            catalog_name: Name of the catalog
+            package_name: Name of the package
+            channel_name: Name of the channel
+            auth_headers: Authentication headers
+            
+        Returns:
+            List of version names
+        """
+        items = self._get_or_load_catalog_data(catalog_name, auth_headers)
+        return self.parser.extract_versions(items, package_name, channel_name)
+    
+    def get_version_metadata(self, catalog_name: str, package_name: str, channel_name: str, 
+                           version: str, auth_headers: Dict[str, str] = None) -> Dict[str, Any]:
+        """
+        Get metadata for a specific version
+        
+        Args:
+            catalog_name: Name of the catalog
+            package_name: Name of the package
+            channel_name: Name of the channel
+            version: Version to get metadata for
+            auth_headers: Authentication headers
+            
+        Returns:
+            Bundle metadata dictionary
+        """
+        items = self._get_or_load_catalog_data(catalog_name, auth_headers)
+        return self.parser.find_bundle_by_version(items, package_name, channel_name, version)
+    
+    def _calculate_age(self, creation_timestamp: str) -> str:
+        """
+        Calculate age from creation timestamp
+        
+        Args:
+            creation_timestamp: ISO format timestamp
+            
+        Returns:
+            Human-readable age string
+        """
+        try:
+            # Parse the timestamp
+            created = datetime.fromisoformat(creation_timestamp.replace('Z', '+00:00'))
+            now = datetime.now(timezone.utc)
+            
+            # Calculate age
+            age_delta = now - created
+            days = age_delta.days
+            hours = age_delta.seconds // 3600
+            minutes = (age_delta.seconds % 3600) // 60
+            
+            if days > 0:
+                return f"{days}d"
+            elif hours > 0:
+                return f"{hours}h"
+            else:
+                return f"{minutes}m"
+                
+        except Exception:
+            return "Unknown"

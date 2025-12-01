@@ -1,0 +1,46 @@
+Generate Config Command Examples
+
+BASIC USAGE:
+    # Generate blank configuration template to stdout
+    python3 rbac-manager.py generate-config
+
+    # Generate configuration template to file
+    python3 rbac-manager.py generate-config --output ./config
+
+OUTPUT EXAMPLES:
+    # Default output (stdout)
+    python3 rbac-manager.py generate-config
+
+    # Save to specific directory
+    python3 rbac-manager.py generate-config --output ./my-configs
+
+    # Redirect stdout to file
+    python3 rbac-manager.py generate-config > my-config.yaml
+
+TYPICAL WORKFLOW:
+    # Step 1: Generate blank template
+    python3 rbac-manager.py generate-config --output ./config
+
+    # Step 2: Edit the generated config file with your operator details
+    # Edit: config/example-operator-rbac-config.yaml
+
+    # Step 3: Use the config with opm to extract RBAC
+    python3 rbac-manager.py opm --config config/example-operator-rbac-config.yaml
+
+GENERATING CONFIG WITH REAL DATA:
+    # For config with real data from catalogd, use catalogd command with --to-config flag:
+    python3 rbac-manager.py catalogd --to-config \
+      --catalog-name openshift-redhat-operators \
+      --package quay-operator \
+      --channel stable-3.15 \
+      --version 3.15.1 \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token $TOKEN
+
+NOTES:
+    - This command generates a blank template with placeholder values
+    - No authentication required - template only
+    - Use 'catalogd --to-config' with all flags for config with real data from cluster
+    - The template includes all required fields for OPM extraction
+    - Only --output flag is available (optional, saves to file instead of stdout)
+

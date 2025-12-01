@@ -1,0 +1,51 @@
+RBAC Manager - Extract RBAC permissions from operator bundles and query catalogs
+
+USAGE:
+    rbac-manager [GLOBAL OPTIONS] <COMMAND> [COMMAND OPTIONS]
+
+DESCRIPTION:
+    A Python tool for extracting and managing RBAC permissions from operator bundles 
+    using the opm binary and interacting with OpenShift catalogs via the catalogd service.
+    Automates the generation of secure RBAC resources and Helm values for OLMv1 operators.
+
+COMMANDS:
+    list-catalogs         List all ClusterCatalogs in the cluster
+    generate-config       Generate blank configuration template (no auth required)
+    catalogd              Query catalogd service for package information
+    opm                   Extract RBAC from bundle using OPM and generate manifests
+
+GLOBAL OPTIONS:
+    -h, --help            Show this help message and exit
+    --debug               Enable debug logging
+    --examples            Show usage examples for specific commands
+
+EXAMPLES:
+    # List all catalogs
+    rbac-manager list-catalogs --openshift-url https://api.cluster.com:6443 --openshift-token TOKEN
+
+    # Generate blank configuration template (no auth required)
+    rbac-manager generate-config --output ./config
+
+    # Query catalogd for packages
+    rbac-manager catalogd --catalog-name openshift-community-operators \
+        --package argocd-operator --channel alpha
+
+    # Query catalogd and generate config with real data
+    rbac-manager catalogd --to-config --catalog-name openshift-community-operators \
+        --package argocd-operator --channel alpha --version 0.8.0 \
+        --openshift-url https://api.cluster.com:6443 --openshift-token TOKEN
+
+    # Extract RBAC using configuration file
+    rbac-manager opm --config argocd-operator-rbac-config.yaml
+
+    # Extract RBAC directly from bundle image
+    rbac-manager opm --image quay.io/redhat/quay-operator-bundle@sha256:abc123... --helm
+
+    # Show examples for specific commands
+    rbac-manager generate-config --examples
+    rbac-manager list-catalogs --examples
+    rbac-manager catalogd --examples
+    rbac-manager opm --examples
+
+For detailed help on a specific command, use:
+    rbac-manager <command> --help

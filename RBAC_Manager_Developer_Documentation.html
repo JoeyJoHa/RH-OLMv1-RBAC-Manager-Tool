@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBAC Manager Tool - Developer Documentation</title>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #28a745;
+            --accent-color: #ff6b6b;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --code-bg: #f4f4f4;
+            --header-bg: #2c3e50;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--header-bg) 0%, #34495e 100%);
+            color: white;
+            padding: 40px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 5px 5px 5px 0;
+        }
+        
+        .badge-primary { background-color: var(--primary-color); color: white; }
+        .badge-success { background-color: var(--secondary-color); color: white; }
+        .badge-warning { background-color: #ffc107; color: #333; }
+        .badge-info { background-color: #17a2b8; color: white; }
+        .badge-danger { background-color: var(--accent-color); color: white; }
+        
+        nav {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        nav a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        nav a:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .section {
+            background-color: var(--card-bg);
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.5em;
+            margin: 25px 0 15px 0;
+        }
+        
+        h4 {
+            color: var(--text-color);
+            font-size: 1.2em;
+            margin: 20px 0 10px 0;
+        }
+        
+        .module-card {
+            background-color: var(--bg-color);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .api-method {
+            background-color: var(--code-bg);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 3px solid var(--secondary-color);
+        }
+        
+        .api-method-name {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.1em;
+        }
+        
+        .api-params {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        
+        .api-params li {
+            margin: 5px 0;
+        }
+        
+        code {
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background-color: var(--code-bg);
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: var(--bg-color);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background-color: var(--bg-color);
+            padding: 20px;
+            border-radius: 6px;
+            border-top: 4px solid var(--secondary-color);
+        }
+        
+        .feature-card h4 {
+            color: var(--secondary-color);
+            margin-top: 0;
+        }
+        
+        .architecture-diagram {
+            background-color: var(--bg-color);
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .workflow-step {
+            background-color: var(--bg-color);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .workflow-step strong {
+            color: var(--primary-color);
+        }
+        
+        footer {
+            background-color: var(--header-bg);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+        
+        .toc {
+            background-color: var(--bg-color);
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .toc ul {
+            list-style-position: inside;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        @media print {
+            nav { display: none; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🛡️ RBAC Manager Tool</h1>
+            <p>Developer Documentation for OLMv1 RBAC Generation</p>
+            <div style="margin-top: 15px;">
+                <span class="badge badge-primary">Python 3.8+</span>
+                <span class="badge badge-success">OLMv1</span>
+                <span class="badge badge-info">Kubernetes</span>
+                <span class="badge badge-warning">OpenShift</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#modules">Modules</a></li>
+                <li><a href="#apis">APIs</a></li>
+                <li><a href="#workflows">Workflows</a></li>
+                <li><a href="#examples">Examples</a></li>
+                <li><a href="#testing">Testing</a></li>
+            </ul>
+        </nav>
+
+        <!-- Overview Section -->
+        <section id="overview" class="section">
+            <h2>📋 Overview</h2>
+            <p>The RBAC Manager is a comprehensive Python tool designed to automate the extraction and generation of RBAC (Role-Based Access Control) resources for OLMv1 operator deployments. It bridges the gap between operator bundle metadata and production-ready Kubernetes RBAC manifests.</p>
+            
+            <h3>Key Capabilities</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🔍 Catalog Discovery</h4>
+                    <p>List and query OpenShift ClusterCatalogs to discover available operators, channels, and versions.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📦 Bundle Analysis</h4>
+                    <p>Extract comprehensive metadata from operator bundle images using the OPM tool.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🛡️ Smart RBAC Generation</h4>
+                    <p>Auto-generate secure RBAC resources with intelligent permission deduplication and optimization.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚙️ Helm Integration</h4>
+                    <p>Generate Helm values files compatible with the generic OLMv1 Helm chart.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔐 Security Best Practices</h4>
+                    <p>Implements OLMv1 security patterns with post-installation hardening guidance.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📝 Configuration Management</h4>
+                    <p>Generate and reuse configuration files for consistent deployments across environments.</p>
+                </div>
+            </div>
+
+            <h3>Recent Enhancements</h3>
+            <div class="highlight">
+                <strong>✨ Latest Updates:</strong>
+                <ul style="margin-top: 10px;">
+                    <li><strong>Operator Name in Finalizers:</strong> Automatically adds operator name to <code>clusterextensions/finalizers</code> resourceNames for both YAML and Helm outputs</li>
+                    <li><strong>Flag Validation:</strong> Prevents incompatible flag combinations (<code>--openshift-namespace</code> and <code>--helm</code>) with clear error messages</li>
+                    <li><strong>Improved UX:</strong> Enhanced error messages guide users to correct usage patterns</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Architecture Section -->
+        <section id="architecture" class="section">
+            <h2>🏗️ Architecture</h2>
+            
+            <h3>System Architecture</h3>
+            <div class="architecture-diagram">
+                <pre style="text-align: left; background-color: white; border: 2px solid var(--border-color);">
+┌─────────────────────────────────────────────────────────────────┐
+│                         CLI Entry Point                          │
+│                      (rbac-manager.py)                           │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Main Application                            │
+│                      (main_app.py)                               │
+│  • Argument parsing                                              │
+│  • Command routing                                               │
+│  • Configuration management                                      │
+└──────┬──────────────┬──────────────┬──────────────┬─────────────┘
+       │              │              │              │
+       ▼              ▼              ▼              ▼
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐
+│ Catalogd │  │   OPM    │  │   Core   │  │     Help     │
+│  Module  │  │  Module  │  │  Module  │  │   Manager    │
+└──────────┘  └──────────┘  └──────────┘  └──────────────┘
+       │              │              │
+       ▼              ▼              ▼
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│ Service  │  │Processor │  │Constants │
+│ Client   │  │Generator │  │  Utils   │
+│ Parser   │  │          │  │  Auth    │
+│ Session  │  │          │  │  Config  │
+└──────────┘  └──────────┘  └──────────┘
+                </pre>
+            </div>
+
+            <h3>Module Organization</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Module</th>
+                        <th>Purpose</th>
+                        <th>Key Components</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>catalogd/</strong></td>
+                        <td>OpenShift catalog integration</td>
+                        <td>Service, Client, Parser, Session, Cache</td>
+                    </tr>
+                    <tr>
+                        <td><strong>opm/</strong></td>
+                        <td>OPM tool integration & RBAC generation</td>
+                        <td>Client, Processor, Generators (Base, YAML, Helm)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>core/</strong></td>
+                        <td>Shared utilities and infrastructure</td>
+                        <td>Constants, Auth, Config, Utils, Exceptions, Protocols</td>
+                    </tr>
+                    <tr>
+                        <td><strong>help/</strong></td>
+                        <td>Help text and examples</td>
+                        <td>Command-specific help files</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Design Patterns</h3>
+            <div class="module-card">
+                <h4>Strategy Pattern</h4>
+                <p>Used in RBAC generation to handle different permission scenarios:</p>
+                <ul>
+                    <li><code>BothPermissionsStrategy</code> - Operators with cluster + namespace permissions</li>
+                    <li><code>ClusterOnlyStrategy</code> - Cluster-scoped operators</li>
+                    <li><code>NamespaceAsClusterStrategy</code> - Namespace permissions treated as cluster</li>
+                    <li><code>NoPermissionsStrategy</code> - Minimal operators</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <h4>Factory Pattern</h4>
+                <p>Strategy selection based on permission analysis, template creation for manifests and Helm values.</p>
+            </div>
+
+            <div class="module-card">
+                <h4>Template Method Pattern</h4>
+                <p>Base generator class defines common RBAC generation workflow, subclasses implement format-specific details.</p>
+            </div>
+        </section>
+
+        <!-- Modules Section -->
+        <section id="modules" class="section">
+            <h2>📦 Modules & Components</h2>
+
+            <h3>1. Core Module (<code>libs/core/</code>)</h3>
+            
+            <div class="module-card">
+                <h4>constants.py</h4>
+                <p><strong>Purpose:</strong> Centralized constants to eliminate magic strings</p>
+                <p><strong>Key Classes:</strong></p>
+                <ul>
+                    <li><code>KubernetesConstants</code> - K8s API groups, resources, verbs, labels</li>
+                    <li><code>OPMConstants</code> - Bundle schemas, property types, CSV sections</li>
+                    <li><code>NetworkConstants</code> - Timeouts, HTTP status codes, headers</li>
+                    <li><code>ErrorMessages</code> - Templated error messages for consistency</li>
+                    <li><code>FileConstants</code> - File extensions, prefixes, directory names</li>
+                </ul>
+                <div class="api-method">
+                    <div class="api-method-name">KubernetesConstants.RBACVerb</div>
+                    <p>Enum of RBAC verbs with helper methods:</p>
+                    <ul class="api-params">
+                        <li><code>get_read_verbs()</code> - Returns [GET, LIST, WATCH]</li>
+                        <li><code>get_write_verbs()</code> - Returns [CREATE, UPDATE, PATCH, DELETE]</li>
+                        <li><code>get_all_verbs()</code> - Returns all verbs except wildcard</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <h4>auth.py</h4>
+                <p><strong>Purpose:</strong> Authentication handling for Kubernetes/OpenShift</p>
+                <div class="api-method">
+                    <div class="api-method-name">configure_kubernetes_client(openshift_url, openshift_token, skip_tls)</div>
+                    <p>Configure Kubernetes client with authentication</p>
+                    <ul class="api-params">
+                        <li><code>openshift_url</code> (str) - Cluster API URL</li>
+                        <li><code>openshift_token</code> (str) - Bearer token</li>
+                        <li><code>skip_tls</code> (bool) - Skip TLS verification</li>
+                        <li><strong>Returns:</strong> Tuple of (CoreV1Api, CustomObjectsApi)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <h4>config.py</h4>
+                <p><strong>Purpose:</strong> Configuration file management and validation</p>
+                <div class="api-method">
+                    <div class="api-method-name">ConfigManager</div>
+                    <p>Manages YAML configuration files for operator deployments</p>
+                    <ul class="api-params">
+                        <li><code>load_config(config_path)</code> - Load and validate config</li>
+                        <li><code>save_config(config, output_dir)</code> - Save config to file</li>
+                        <li><code>generate_blank_config()</code> - Generate template config</li>
+                        <li><code>validate_config(config)</code> - Validate config structure</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <h4>exceptions.py</h4>
+                <p><strong>Purpose:</strong> Custom exception hierarchy</p>
+                <ul>
+                    <li><code>RBACManagerError</code> - Base exception</li>
+                    <li><code>CatalogdError</code> - Catalogd service errors</li>
+                    <li><code>BundleProcessingError</code> - Bundle extraction errors</li>
+                    <li><code>ConfigurationError</code> - Configuration errors</li>
+                    <li><code>AuthenticationError</code> - Auth failures</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <h4>utils.py</h4>
+                <p><strong>Purpose:</strong> Shared utility functions</p>
+                <div class="api-method">
+                    <div class="api-method-name">handle_api_error(error, exception_class)</div>
+                    <p>Centralized API error handling with enhanced messages</p>
+                </div>
+                <div class="api-method">
+                    <div class="api-method-name">is_output_piped()</div>
+                    <p>Detect if output is being piped (for JSON vs human-readable output)</p>
+                </div>
+            </div>
+
+            <h3>2. Catalogd Module (<code>libs/catalogd/</code>)</h3>
+            
+            <div class="module-card">
+                <h4>service.py - CatalogdService</h4>
+                <p><strong>Purpose:</strong> High-level catalogd operations</p>
+                
+                <div class="api-method">
+                    <div class="api-method-name">list_cluster_catalogs()</div>
+                    <p>List all ClusterCatalogs from Kubernetes API</p>
+                    <ul class="api-params">
+                        <li><strong>Returns:</strong> List[Dict] - Catalog objects with metadata</li>
+                        <li><strong>Raises:</strong> CatalogdError on failure</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">query_catalog_data(catalog_name, auth_headers)</div>
+                    <p>Query catalog data from catalogd service</p>
+                    <ul class="api-params">
+                        <li><code>catalog_name</code> (str) - Catalog to query</li>
+                        <li><code>auth_headers</code> (Dict) - Optional auth headers</li>
+                        <li><strong>Returns:</strong> List[Dict] - Parsed catalog items</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">get_catalog_packages(catalog_name, auth_headers)</div>
+                    <p>Get list of packages in a catalog (with caching)</p>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">get_package_channels(catalog_name, package_name, auth_headers)</div>
+                    <p>Get list of channels for a package</p>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">get_channel_versions(catalog_name, package_name, channel_name, auth_headers)</div>
+                    <p>Get list of versions for a package channel</p>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">get_version_metadata(catalog_name, package_name, channel_name, version, auth_headers)</div>
+                    <p>Get detailed metadata for a specific version</p>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <h4>client.py - CatalogdClient</h4>
+                <p><strong>Purpose:</strong> Low-level HTTP client for catalogd API</p>
+                <ul>
+                    <li><code>create_port_forward()</code> - Establish port-forward to catalogd service</li>
+                    <li><code>make_catalogd_request(url, port_forward_manager, auth_headers, catalog_name)</code> - Make HTTP request</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <h4>parser.py - NDJSONParser</h4>
+                <p><strong>Purpose:</strong> Parse NDJSON responses from catalogd</p>
+                <ul>
+                    <li><code>parse_stream(data)</code> - Parse NDJSON stream</li>
+                    <li><code>extract_packages(items)</code> - Extract package names</li>
+                    <li><code>extract_channels(items, package_name)</code> - Extract channels</li>
+                    <li><code>extract_versions(items, package_name, channel_name)</code> - Extract versions</li>
+                    <li><code>find_bundle_by_version(items, package_name, channel_name, version)</code> - Find specific bundle</li>
+                </ul>
+            </div>
+
+            <h3>3. OPM Module (<code>libs/opm/</code>)</h3>
+            
+            <div class="module-card">
+                <h4>processor.py - BundleProcessor</h4>
+                <p><strong>Purpose:</strong> High-level bundle processing orchestration</p>
+                
+                <div class="api-method">
+                    <div class="api-method-name">extract_bundle_metadata(image, registry_token)</div>
+                    <p>Extract and process bundle metadata from container image</p>
+                    <ul class="api-params">
+                        <li><code>image</code> (str) - Container image URL</li>
+                        <li><code>registry_token</code> (str, optional) - Registry auth token</li>
+                        <li><strong>Returns:</strong> Dict - Processed bundle metadata</li>
+                        <li><strong>Raises:</strong> BundleProcessingError on failure</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">generate_helm_values(bundle_metadata, operator_name, channel)</div>
+                    <p>Generate Helm values YAML from bundle metadata</p>
+                    <ul class="api-params">
+                        <li><code>bundle_metadata</code> (Dict) - Processed metadata</li>
+                        <li><code>operator_name</code> (str, optional) - Custom operator name</li>
+                        <li><code>channel</code> (str, optional) - Operator channel</li>
+                        <li><strong>Returns:</strong> str - Helm values YAML</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">generate_yaml_manifests(bundle_metadata, namespace, operator_name)</div>
+                    <p>Generate Kubernetes YAML manifests</p>
+                    <ul class="api-params">
+                        <li><code>bundle_metadata</code> (Dict) - Processed metadata</li>
+                        <li><code>namespace</code> (str) - Target namespace</li>
+                        <li><code>operator_name</code> (str, optional) - Custom operator name</li>
+                        <li><strong>Returns:</strong> Dict[str, str] - Manifest name to YAML content mapping</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <h4>base_generator.py - BaseGenerator</h4>
+                <p><strong>Purpose:</strong> Base class for RBAC generation with shared logic</p>
+                
+                <div class="api-method">
+                    <div class="api-method-name">analyze_permissions(bundle_metadata)</div>
+                    <p>Analyze bundle permissions and determine generation strategy</p>
+                    <ul class="api-params">
+                        <li><strong>Returns:</strong> PermissionAnalysis - Strategy and extracted rules</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">analyze_rbac_components(bundle_metadata)</div>
+                    <p>Determine which RBAC components are needed using Strategy pattern</p>
+                    <ul class="api-params">
+                        <li><strong>Returns:</strong> Dict with components_needed, rules, permission_scenario</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">_process_and_deduplicate_rules(rules)</div>
+                    <p>Advanced permission deduplication:</p>
+                    <ul class="api-params">
+                        <li>Removes exact duplicates</li>
+                        <li>Handles wildcard permissions intelligently</li>
+                        <li>Preserves resourceNames-specific rules</li>
+                        <li>Groups similar rules to reduce redundancy</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">_filter_unique_role_rules(role_rules, cluster_rules)</div>
+                    <p>Filter Role rules to exclude those covered by ClusterRole rules</p>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">_generate_operator_rules(bundle_metadata)</div>
+                    <p>Generate operator management rules (CRDs, RBAC, finalizers)</p>
+                    <p><strong>✨ Recent Enhancement:</strong> Now includes operator name in clusterextensions/finalizers resourceNames by default</p>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <h4>yaml_generator.py - YAMLManifestGenerator</h4>
+                <p><strong>Purpose:</strong> Generate Kubernetes YAML manifests</p>
+                <ul>
+                    <li><code>generate(bundle_metadata, namespace, operator_name)</code> - Main generation method</li>
+                    <li>Generates: ServiceAccount, ClusterRole(s), ClusterRoleBinding(s), Role, RoleBinding</li>
+                    <li>Includes security hardening comments and guidance</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <h4>helm_generator.py - HelmValuesGenerator</h4>
+                <p><strong>Purpose:</strong> Generate Helm values.yaml</p>
+                <ul>
+                    <li><code>generate(bundle_metadata, operator_name, channel)</code> - Main generation method</li>
+                    <li>Generates values compatible with generic OLMv1 Helm chart</li>
+                    <li>Includes channel verification guidance</li>
+                    <li>Uses flow-style arrays for clean formatting</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <h4>client.py - OPMClient</h4>
+                <p><strong>Purpose:</strong> Execute OPM CLI commands</p>
+                <ul>
+                    <li><code>extract_bundle_metadata(image, registry_token)</code> - Run opm render</li>
+                    <li><code>validate_image(image, registry_token)</code> - Validate bundle image</li>
+                    <li><code>is_index_image(image)</code> - Detect index vs bundle images</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- APIs Section -->
+        <section id="apis" class="section">
+            <h2>🔌 Public APIs</h2>
+
+            <h3>Main Application API</h3>
+            <div class="module-card">
+                <h4>RBACManager Class</h4>
+                <p>Main entry point for programmatic usage</p>
+                
+                <div class="api-method">
+                    <div class="api-method-name">__init__(skip_tls=False, debug=False)</div>
+                    <p>Initialize RBAC Manager</p>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">configure_authentication(openshift_url, openshift_token)</div>
+                    <p>Configure Kubernetes/OpenShift authentication</p>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">list_catalogs()</div>
+                    <p>List available ClusterCatalogs</p>
+                    <ul class="api-params">
+                        <li><strong>Returns:</strong> int - Exit code (0 for success)</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">query_catalogd(catalog_name, package, channel, version, to_config, output_dir)</div>
+                    <p>Query catalogd service for operator information</p>
+                    <ul class="api-params">
+                        <li><code>catalog_name</code> (str, optional) - Catalog name</li>
+                        <li><code>package</code> (str, optional) - Package name</li>
+                        <li><code>channel</code> (str, optional) - Channel name</li>
+                        <li><code>version</code> (str, optional) - Version</li>
+                        <li><code>to_config</code> (bool) - Generate config file</li>
+                        <li><code>output_dir</code> (str, optional) - Output directory</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">extract_bundle(image, namespace, registry_token, helm, output_dir, stdout, channel)</div>
+                    <p>Extract bundle and generate RBAC resources</p>
+                    <ul class="api-params">
+                        <li><code>image</code> (str) - Bundle image URL</li>
+                        <li><code>namespace</code> (str) - Target namespace</li>
+                        <li><code>registry_token</code> (str, optional) - Registry auth</li>
+                        <li><code>helm</code> (bool) - Generate Helm values</li>
+                        <li><code>output_dir</code> (str, optional) - Output directory</li>
+                        <li><code>stdout</code> (bool) - Print to stdout</li>
+                        <li><code>channel</code> (str, optional) - Operator channel</li>
+                    </ul>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">generate_config(output_dir)</div>
+                    <p>Generate blank configuration template</p>
+                </div>
+
+                <div class="api-method">
+                    <div class="api-method-name">load_config(config_path)</div>
+                    <p>Load and validate configuration file</p>
+                </div>
+            </div>
+
+            <h3>CLI Commands</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Command</th>
+                        <th>Description</th>
+                        <th>Key Flags</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>list-catalogs</code></td>
+                        <td>List all ClusterCatalogs</td>
+                        <td>--openshift-url, --openshift-token, --skip-tls</td>
+                    </tr>
+                    <tr>
+                        <td><code>catalogd</code></td>
+                        <td>Query catalogd service</td>
+                        <td>--catalog-name, --package, --channel, --version, --to-config</td>
+                    </tr>
+                    <tr>
+                        <td><code>opm</code></td>
+                        <td>Extract bundle & generate RBAC</td>
+                        <td>--image, --config, --helm, --namespace, --output</td>
+                    </tr>
+                    <tr>
+                        <td><code>generate-config</code></td>
+                        <td>Generate config template</td>
+                        <td>--output</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Flag Validation Rules</h3>
+            <div class="highlight">
+                <strong>⚠️ Important:</strong> The following flag combinations are mutually exclusive:
+                <ul style="margin-top: 10px;">
+                    <li><code>--openshift-namespace</code> and <code>--helm</code> cannot be used together</li>
+                    <li><code>--openshift-namespace</code> is only valid for YAML generation (when <code>--helm</code> is omitted)</li>
+                    <li>For Helm generation, use <code>--helm</code> without <code>--openshift-namespace</code></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Workflows Section -->
+        <section id="workflows" class="section">
+            <h2>🔄 Common Workflows</h2>
+
+            <h3>Workflow 1: Configuration-Based Deployment (Recommended)</h3>
+            <div class="workflow-step">
+                <strong>Step 1:</strong> List available catalogs
+                <pre><code>python3 rbac-manager.py list-catalogs --openshift-url https://api.cluster.example.com:6443 --openshift-token sha256~token</code></pre>
+            </div>
+            <div class="workflow-step">
+                <strong>Step 2:</strong> Generate configuration from catalogd
+                <pre><code>python3 rbac-manager.py catalogd --to-config \
+  --catalog-name openshift-community-operators \
+  --package argocd-operator --channel alpha --version 0.8.0 \
+  --openshift-url https://api.cluster.example.com:6443 \
+  --openshift-token sha256~token --skip-tls \
+  --output ./config</code></pre>
+            </div>
+            <div class="workflow-step">
+                <strong>Step 3:</strong> Extract RBAC using configuration
+                <pre><code>python3 rbac-manager.py opm --config ./config/argocd-operator-rbac-config.yaml</code></pre>
+            </div>
+            <div class="workflow-step">
+                <strong>Step 4:</strong> Deploy RBAC resources
+                <pre><code>kubectl apply -f argocd-operator-serviceaccount-*.yaml
+kubectl apply -f argocd-operator-clusterrole-*.yaml
+kubectl apply -f argocd-operator-clusterrolebinding-*.yaml</code></pre>
+            </div>
+
+            <h3>Workflow 2: Direct Bundle Extraction</h3>
+            <div class="workflow-step">
+                <strong>Step 1:</strong> Extract RBAC directly from bundle image
+                <pre><code>python3 rbac-manager.py opm \
+  --image quay.io/operatorhubio/argocd-operator:v0.12.0 \
+  --namespace argocd-operator \
+  --output ./rbac-files</code></pre>
+            </div>
+            <div class="workflow-step">
+                <strong>Step 2:</strong> Review generated files
+                <pre><code>ls -la ./rbac-files/</code></pre>
+            </div>
+            <div class="workflow-step">
+                <strong>Step 3:</strong> Apply to cluster
+                <pre><code>kubectl apply -f ./rbac-files/</code></pre>
+            </div>
+
+            <h3>Workflow 3: Helm Values Generation</h3>
+            <div class="workflow-step">
+                <strong>Step 1:</strong> Generate Helm values
+                <pre><code>python3 rbac-manager.py opm \
+  --image quay.io/operatorhubio/argocd-operator:v0.12.0 \
+  --helm \
+  --output ./helm-values</code></pre>
+            </div>
+            <div class="workflow-step">
+                <strong>Step 2:</strong> Review and customize values
+                <pre><code>cat ./helm-values/argocd-operator-values.yaml</code></pre>
+            </div>
+            <div class="workflow-step">
+                <strong>Step 3:</strong> Deploy with Helm
+                <pre><code>helm install argocd-operator ./helm-chart \
+  -f ./helm-values/argocd-operator-values.yaml</code></pre>
+            </div>
+
+            <h3>RBAC Generation Logic Flow</h3>
+            <div class="architecture-diagram">
+                <pre style="text-align: left; background-color: white; border: 2px solid var(--border-color);">
+┌─────────────────────────────────────────────────────────────┐
+│              Extract Bundle Metadata (OPM)                  │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│           Analyze Permissions (Strategy Selection)          │
+│  • Both cluster + namespace permissions?                    │
+│  • Only cluster permissions?                                │
+│  • Only namespace permissions?                              │
+│  • No permissions?                                          │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Execute Selected Strategy                      │
+│  • Generate installer ClusterRole (operator mgmt)           │
+│  • Generate grantor ClusterRole (app permissions)           │
+│  • Generate namespace Role (if needed)                      │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│           Process & Deduplicate Rules                       │
+│  • Remove exact duplicates                                  │
+│  • Handle wildcard permissions                              │
+│  • Filter Role rules covered by ClusterRole                 │
+│  • Preserve resourceNames-specific rules                    │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Generate Output (YAML or Helm)                 │
+│  • Format rules with flow-style arrays                      │
+│  • Add security hardening comments                          │
+│  • Include post-installation guidance                       │
+└─────────────────────────────────────────────────────────────┘
+                </pre>
+            </div>
+        </section>
+
+        <!-- Examples Section -->
+        <section id="examples" class="section">
+            <h2>💡 Code Examples</h2>
+
+            <h3>Example 1: Programmatic Usage</h3>
+            <pre><code>from rbac_manager.libs.main_app import RBACManager
+
+# Initialize
+manager = RBACManager(skip_tls=True, debug=False)
+
+# Configure authentication
+manager.configure_authentication(
+    openshift_url="https://api.cluster.example.com:6443",
+    openshift_token="sha256~your-token"
+)
+
+# List catalogs
+manager.list_catalogs()
+
+# Extract bundle and generate RBAC
+manager.extract_bundle(
+    image="quay.io/operatorhubio/argocd-operator:v0.12.0",
+    namespace="argocd-operator",
+    helm=False,
+    output_dir="./output",
+    stdout=False
+)</code></pre>
+
+            <h3>Example 2: Custom Bundle Processing</h3>
+            <pre><code>from rbac_manager.libs.opm.processor import BundleProcessor
+
+# Initialize processor
+processor = BundleProcessor(skip_tls=True, debug=True)
+
+# Extract metadata
+metadata = processor.extract_bundle_metadata(
+    image="quay.io/operatorhubio/argocd-operator:v0.12.0",
+    registry_token=None
+)
+
+# Generate Helm values
+helm_values = processor.generate_helm_values(
+    bundle_metadata=metadata,
+    operator_name="my-argocd",
+    channel="alpha"
+)
+
+print(helm_values)</code></pre>
+
+            <h3>Example 3: Catalogd Query</h3>
+            <pre><code>from rbac_manager.libs.catalogd.service import CatalogdService
+from rbac_manager.libs.core.auth import configure_kubernetes_client
+
+# Configure client
+core_api, custom_api = configure_kubernetes_client(
+    openshift_url="https://api.cluster.example.com:6443",
+    openshift_token="sha256~token",
+    skip_tls=True
+)
+
+# Initialize service
+service = CatalogdService(core_api, custom_api, skip_tls=True)
+
+# Query catalog
+packages = service.get_catalog_packages("openshift-community-operators")
+print(f"Found {len(packages)} packages")
+
+# Get channels for a package
+channels = service.get_package_channels(
+    "openshift-community-operators",
+    "argocd-operator"
+)
+print(f"Channels: {channels}")</code></pre>
+
+            <h3>Example 4: Configuration Management</h3>
+            <pre><code>from rbac_manager.libs.core.config import ConfigManager
+
+# Initialize manager
+config_mgr = ConfigManager()
+
+# Generate blank config
+blank_config = config_mgr.generate_blank_config()
+
+# Customize config
+blank_config['operator']['name'] = 'my-operator'
+blank_config['operator']['packageName'] = 'argocd-operator'
+blank_config['operator']['channel'] = 'alpha'
+
+# Save config
+config_mgr.save_config(blank_config, output_dir="./config")
+
+# Load config later
+loaded_config = config_mgr.load_config("./config/my-operator-rbac-config.yaml")
+
+# Validate
+is_valid = config_mgr.validate_config(loaded_config)
+print(f"Config valid: {is_valid}")</code></pre>
+        </section>
+
+        <!-- Testing Section -->
+        <section id="testing" class="section">
+            <h2>🧪 Testing</h2>
+
+            <h3>Test Suite Structure</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test File</th>
+                        <th>Purpose</th>
+                        <th>Coverage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>test_catalogd.py</code></td>
+                        <td>Catalogd integration tests</td>
+                        <td>Service, client, parser, session</td>
+                    </tr>
+                    <tr>
+                        <td><code>test_opm.py</code></td>
+                        <td>OPM integration tests</td>
+                        <td>Client, processor, generators</td>
+                    </tr>
+                    <tr>
+                        <td><code>test_workflow.py</code></td>
+                        <td>End-to-end workflow tests</td>
+                        <td>Complete user workflows</td>
+                    </tr>
+                    <tr>
+                        <td><code>test_constants.py</code></td>
+                        <td>Constants validation</td>
+                        <td>Enum values, helper methods</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Running Tests</h3>
+            <pre><code># Run all tests
+python3 -m pytest tests/ -v
+
+# Run specific test suite
+python3 tests/test_opm.py
+
+# Run with coverage
+python3 -m pytest tests/ --cov=rbac_manager --cov-report=html
+
+# Run catalogd tests (requires cluster access)
+python3 tests/test_catalogd.py --openshift-url https://api.cluster.example.com:6443 \
+  --openshift-token sha256~token --skip-tls</code></pre>
+
+            <h3>Test Configuration</h3>
+            <div class="module-card">
+                <h4>Environment Variables</h4>
+                <ul>
+                    <li><code>OPENSHIFT_URL</code> - Cluster API URL for integration tests</li>
+                    <li><code>OPENSHIFT_TOKEN</code> - Auth token for integration tests</li>
+                    <li><code>SKIP_TLS</code> - Skip TLS verification (true/false)</li>
+                    <li><code>TEST_CATALOG</code> - Catalog name for tests</li>
+                </ul>
+            </div>
+
+            <h3>Test Coverage Goals</h3>
+            <ul>
+                <li>✅ Unit tests: 80%+ coverage</li>
+                <li>✅ Integration tests: Key workflows covered</li>
+                <li>✅ Error handling: All exception paths tested</li>
+                <li>✅ Edge cases: Boundary conditions validated</li>
+            </ul>
+        </section>
+
+        <!-- Additional Resources -->
+        <section id="resources" class="section">
+            <h2>📚 Additional Resources</h2>
+
+            <h3>Documentation Files</h3>
+            <ul>
+                <li><code>README.md</code> - User guide and installation instructions</li>
+                <li><code>COMMAND_REFERENCE.md</code> - Detailed command reference</li>
+                <li><code>DEPLOYMENT.md</code> - Deployment guide</li>
+                <li><code>help/</code> - Command-specific help text files</li>
+            </ul>
+
+            <h3>Example Files</h3>
+            <ul>
+                <li><code>examples/helm/</code> - Helm values examples</li>
+                <li><code>examples/yamls/</code> - YAML manifest examples</li>
+                <li><code>examples/rbac-manager/config/</code> - Configuration examples</li>
+            </ul>
+
+            <h3>External References</h3>
+            <ul>
+                <li><a href="https://github.com/operator-framework/operator-registry" target="_blank">OPM Tool Documentation</a></li>
+                <li><a href="https://olm.operatorframework.io/" target="_blank">OLM Documentation</a></li>
+                <li><a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/" target="_blank">Kubernetes RBAC</a></li>
+                <li><a href="https://helm.sh/docs/" target="_blank">Helm Documentation</a></li>
+            </ul>
+
+            <h3>Contributing</h3>
+            <p>To contribute to the RBAC Manager tool:</p>
+            <ol>
+                <li>Fork the repository</li>
+                <li>Create a feature branch: <code>git checkout -b feature/my-feature</code></li>
+                <li>Make your changes following Python best practices</li>
+                <li>Add tests for new functionality</li>
+                <li>Run the test suite to ensure everything passes</li>
+                <li>Submit a pull request with a clear description</li>
+            </ol>
+        </section>
+
+        <!-- Best Practices -->
+        <section id="best-practices" class="section">
+            <h2>✨ Best Practices</h2>
+
+            <h3>Development Guidelines</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Code Organization</h4>
+                    <ul>
+                        <li>Use constants from <code>constants.py</code></li>
+                        <li>Follow existing module structure</li>
+                        <li>Keep functions focused and single-purpose</li>
+                        <li>Use type hints for better IDE support</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>Error Handling</h4>
+                    <ul>
+                        <li>Use custom exceptions from <code>exceptions.py</code></li>
+                        <li>Provide helpful error messages</li>
+                        <li>Log errors with appropriate levels</li>
+                        <li>Handle edge cases gracefully</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>Testing</h4>
+                    <ul>
+                        <li>Write tests for new features</li>
+                        <li>Test error paths and edge cases</li>
+                        <li>Use meaningful test names</li>
+                        <li>Keep tests independent</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h4>Documentation</h4>
+                    <ul>
+                        <li>Add docstrings to all public methods</li>
+                        <li>Update README for new features</li>
+                        <li>Include usage examples</li>
+                        <li>Document breaking changes</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Security Considerations</h3>
+            <div class="highlight">
+                <strong>🔐 Security Best Practices:</strong>
+                <ul style="margin-top: 10px;">
+                    <li>Never hardcode credentials or tokens</li>
+                    <li>Use environment variables for sensitive data</li>
+                    <li>Validate all user inputs</li>
+                    <li>Follow principle of least privilege for RBAC</li>
+                    <li>Review generated RBAC before deployment</li>
+                    <li>Implement post-installation hardening as documented</li>
+                </ul>
+            </div>
+
+            <h3>Performance Tips</h3>
+            <ul>
+                <li>Use caching for catalog queries (implemented in <code>CatalogdService</code>)</li>
+                <li>Batch API requests when possible</li>
+                <li>Use streaming for large responses</li>
+                <li>Enable debug logging only when troubleshooting</li>
+                <li>Clean up temporary files and connections</li>
+            </ul>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 RBAC Manager Tool - OLMv1 RBAC Generation</p>
+            <p>Developed for OpenShift Operator Lifecycle Manager v1</p>
+            <p style="margin-top: 10px;">
+                <span class="badge badge-primary">Version 1.0</span>
+                <span class="badge badge-success">Python 3.8+</span>
+                <span class="badge badge-info">Open Source</span>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
+

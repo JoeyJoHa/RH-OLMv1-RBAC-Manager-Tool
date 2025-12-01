@@ -1,0 +1,114 @@
+Catalogd Command Examples
+
+BASIC USAGE:
+    # Interactive catalog selection with port-forwarding
+    python3 rbac-manager.py catalogd
+
+    # Query specific catalog
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators
+
+    # Query with authentication flags
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token sha256~abc123...
+
+HIERARCHICAL QUERIES:
+    # List all packages in catalog
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators
+
+    # Show channels for specific package
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators \
+      --package quay-operator
+
+    # Show versions for specific channel
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators \
+      --package quay-operator --channel stable-3.10
+
+    # Get detailed metadata for specific version
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators \
+      --package quay-operator --channel stable-3.10 --version 3.10.0
+
+GENERATE CONFIG WITH REAL DATA:
+    # Query catalogd and generate config file with extracted bundle image
+    python3 rbac-manager.py catalogd --to-config \
+      --catalog-name openshift-redhat-operators \
+      --package quay-operator \
+      --channel stable-3.15 \
+      --version 3.15.1 \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token $TOKEN --skip-tls
+
+    # Generate config to stdout
+    python3 rbac-manager.py catalogd --to-config \
+      --catalog-name openshift-redhat-operators \
+      --package quay-operator \
+      --channel stable-3.15 \
+      --version 3.15.1 \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token $TOKEN --skip-tls
+
+    # Generate config to custom output directory
+    python3 rbac-manager.py catalogd --to-config \
+      --catalog-name openshift-redhat-operators \
+      --package quay-operator \
+      --channel stable-3.15 \
+      --version 3.15.1 \
+      --output ./my-configs \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token $TOKEN --skip-tls
+
+ADVANCED OPTIONS:
+    # With debug logging and TLS skip
+    python3 rbac-manager.py catalogd --catalog-name test-catalog \
+      --debug --skip-tls
+
+    # Using environment variables for token
+    export TOKEN="sha256~your-token-here"
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token $TOKEN --skip-tls
+
+    # PowerShell environment variable
+    $env:TOKEN = "sha256~your-token-here"
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token $env:TOKEN --skip-tls
+
+CONFIGURATION GENERATION:
+    # Generate config template to stdout
+    python3 rbac-manager.py catalogd --generate-config
+
+    # Generate config template to file
+    python3 rbac-manager.py catalogd --generate-config --output ./config
+
+    # Generate config with placeholder values to stdout
+    python3 rbac-manager.py catalogd --generate-config \
+      --package argocd-operator --channel alpha --version v0.8.0
+
+    # Generate config with real bundle data (requires cluster access)
+    python3 rbac-manager.py catalogd --generate-config \
+      --catalog-name operatorhubio-catalog \
+      --package argocd-operator --channel alpha --version v0.8.0 \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token sha256~your-token --skip-tls
+
+    # Generate config with real data to file
+    python3 rbac-manager.py catalogd --generate-config \
+      --catalog-name operatorhubio-catalog \
+      --package argocd-operator --channel alpha --version v0.8.0 \
+      --openshift-url https://api.cluster.example.com:6443 \
+      --openshift-token sha256~your-token --skip-tls \
+      --output ./my-configs
+
+PIPING OUTPUT:
+    # Get package list and pipe to grep
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators | \
+      jq -r '.data[].name' | grep -i "operator"
+
+    # Save metadata to file
+    python3 rbac-manager.py catalogd --catalog-name openshift-redhat-operators \
+      --package quay-operator --channel stable-3.10 --version 3.10.0 > metadata.json
+
+    # Generate config and pipe to file
+    python3 rbac-manager.py catalogd --generate-config \
+      --package argocd-operator --channel alpha > my-config.yaml
