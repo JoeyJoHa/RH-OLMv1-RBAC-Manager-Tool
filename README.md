@@ -149,7 +149,7 @@ kubectl apply -f rbac-output/argocd-operator-clusterrolebinding-*.yaml
 
 ## Tool Structure
 
-```
+```tree
 OLMv1-RBAC-Manager/
 ├── examples/                         # Example outputs and configs
 │   ├── config/                       # Configuration file examples
@@ -587,7 +587,7 @@ python3 -m pytest tests/ --cov=rbac-manager
 
 ### With OLMv1 Helm Chart
 
-The generated Helm values files work seamlessly with the [OLMv1 Helm Chart](https://github.com/yourusername/OLMv1-Helm-Chart):
+The generated Helm values files work seamlessly with the [OLMv1 Helm Chart](https://github.com/JoeyJoHa/RH-OLMv1-Helm):
 
 ```bash
 # Generate Helm values
@@ -633,12 +633,14 @@ git commit -m "Add ArgoCD operator RBAC configuration"
 #### 1. "opm binary not found"
 
 **Solution:**
+
 - Install opm CLI tool from [operator-framework releases](https://github.com/operator-framework/operator-registry/releases)
 - Ensure opm is in your PATH
 
 #### 2. "Failed to establish port-forward"
 
 **Solution:**
+
 - Ensure kubeconfig is configured and connected to your cluster, OR
 - Use `--openshift-url` and `--openshift-token` for direct API access
 - Check that catalogd service exists in openshift-catalogd namespace
@@ -646,6 +648,7 @@ git commit -m "Add ArgoCD operator RBAC configuration"
 #### 3. "No ClusterCatalogs found"
 
 **Solution:**
+
 - Verify you're connected to an OpenShift cluster with OLMv1
 - Check cluster permissions for listing ClusterCatalogs
 - Try using direct API access with `--openshift-url` and `--openshift-token`
@@ -653,12 +656,14 @@ git commit -m "Add ArgoCD operator RBAC configuration"
 #### 4. "Image appears to be an index image"
 
 **Solution:**
+
 - Create a ClusterCatalog resource first
 - Use `catalogd` command instead of `opm` command for index images
 
 #### 5. "Kubernetes client not initialized"
 
 **Solution:**
+
 - Either configure kubeconfig, OR
 - Use `--openshift-url https://api.cluster.com:6443 --openshift-token <token>`
 
@@ -682,8 +687,8 @@ python3 rbac-manager.py catalogd --skip-tls \
 
 ## Related Projects
 
-- **[OLMv1 Helm Chart](https://github.com/yourusername/OLMv1-Helm-Chart)**: Helm chart for simplified operator deployment
-- **[OLMv1 Case Study](https://github.com/yourusername/OLMv1-CaseStudy)**: Examples and documentation for OLMv1 deployments
+- **[OLMv1 Helm Chart](https://github.com/JoeyJoHa/RH-OLMv1-Helm)**: Helm chart for simplified operator deployment
+- **[OLMv1 Case Study](https://github.com/JoeyJoHa/RH-OLMv1-CaseStudy)**: Examples and documentation for OLMv1 deployments
 
 ## Contributing
 
@@ -729,7 +734,7 @@ For issues and questions:
 
 - Open an issue in this repository
 - Check the [OLMv1 documentation](https://github.com/openshift/operator-framework-operator-controller)
-- Review the [Case Study repository](https://github.com/yourusername/OLMv1-CaseStudy) for examples
+- Review the [Case Study repository](https://github.com/JoeyJoHa/RH-OLMv1-CaseStudy) for examples
 
 ---
 
